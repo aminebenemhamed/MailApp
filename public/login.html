@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<title>MailApp</title>
+<script>
+  try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="MailApp">
+<link rel="stylesheet" href="style.css">
+<style>
+  body { display: grid; place-items: center; min-height: 100vh; min-height: 100dvh; padding: 16px; }
+  .card { width: 100%; max-width: 380px; padding: 32px 28px 28px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); text-align: center; }
+  .card .logo { margin: 0 auto 18px; width: 52px; height: 52px; border-radius: 15px; }
+  .card .logo svg { width: 26px; height: 26px; }
+  .card h1 { font-size: 21px; margin: 0 0 6px; letter-spacing: -.01em; }
+  .card p { margin: 0 0 22px; color: var(--text-3); font-size: 13.5px; }
+  .card .field { text-align: left; }
+  .card .btn { width: 100%; justify-content: center; height: 42px; margin-top: 4px; }
+  .card .form-err { text-align: left; }
+</style>
+</head>
+<body data-mode="{{MODE}}">
+<div class="card">
+  <div class="logo"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m22 7-10 6L2 7"/></svg></div>
+  <h1 id="title">MailApp</h1>
+  <p id="sub"></p>
+  <form id="form">
+    <label class="field"><span>Password</span><input name="password" id="pw" type="password" autocomplete="current-password" required autofocus></label>
+    <label class="field" id="confirmField" hidden><span>Confirm</span><input id="pw2" type="password" autocomplete="new-password"></label>
+    <div class="form-err" id="err" hidden></div>
+    <button class="btn" id="go" type="submit">Unlock</button>
+  </form>
+</div>
+<script>
+  const mode = document.body.dataset.mode;
+  const $ = (s) => document.querySelector(s);
+  if (mode === 'setup') {
+    $('#title').textContent = 'Welcome';
+    $('#sub').textContent = 'Create the password that protects MailApp. You’ll use it to open all your accounts.';
+    $('#confirmField').hidden = false;
+    $('#pw').autocomplete = 'new-password';
+    $('#go').textContent = 'Create password';
+  } else if (mode === 'blocked') {
+    $('#sub').textContent = 'No password is set up. Create it on your computer first, then upload the data folder to the server (see README).';
+    $('#form').hidden = true;
+  } else {
+    $('#sub').textContent = 'Enter your password to open your mail.';
+  }
+  $('#form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const err = $('#err');
+    err.hidden = true;
+    if (mode === 'setup' && $('#pw').value !== $('#pw2').value) {
+      err.textContent = 'The two passwords don’t match';
+      err.hidden = false;
+      return;
+    }
+    $('#go').disabled = true;
+    try {
+      const res = await fetch('?api=' + (mode === 'setup' ? 'setup' : 'login'), {
+        method: 'POST', headers: { 'X-MailApp': '1' }, body: new URLSearchParams({ password: $('#pw').value }),
+      });
+      const data = await res.json().catch(() => ({ error: 'Server error' }));
+      if (!res.ok || data.error) throw new Error(data.error || 'Error');
+      location.reload();
+    } catch (e) {
+      err.textContent = e.message;
+      err.hidden = false;
+      $('#pw').select();
+    } finally {
+      $('#go').disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

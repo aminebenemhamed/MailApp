@@ -1,0 +1,19 @@
+# MailApp on Apache (DreamHost)
+Options -Indexes
+
+# Always HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Only the app's own files are reachable
+<FilesMatch "^(boot\.php|login\.html|app\.html|\..*)$">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Frame-Options "DENY"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "no-referrer"
+</IfModule>

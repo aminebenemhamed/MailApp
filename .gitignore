@@ -1,0 +1,20 @@
+config.php
+data/
+.DS_Store
+
+# --- added: secrets & data ---
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+.next/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.db
+*.mp4
+logs/
+config.php
+data/
